@@ -1,45 +1,20 @@
-# Current Feature: Graceful Shutdown
+# Current Feature
+
+<!-- Feature Name -->
 
 ## Status
 
-In Progress
+<!-- Not Started|In Progress|Completed -->
+
+Not Started
 
 ## Goals
 
-- Wrap server startup/shutdown in a small `Server` class (or module-level
-  functions if simpler) in `src/server.ts` so logic is grouped, not scattered
-- On `SIGTERM`/`SIGINT`:
-  - Stop accepting new connections via `server.close()` on the instance
-    returned by `@hono/node-server`'s `serve()`
-  - Close the `postgres.js` connection (`client.end()`) — export the raw
-    `postgres` client instance from `src/db/client.ts` so it can be closed,
-    not just the wrapped `db` object
-  - Close WebSocket connections **if any exist** — no WS setup exists yet,
-    so this must be a clearly-marked placeholder function, not dead code
-  - Force-exit after a 10s timeout if shutdown hangs — log clearly whether
-    the timeout path or a clean shutdown was hit
-- On `uncaughtException`/`unhandledRejection`: log with context and exit
-  non-zero — no graceful cleanup attempt (process state unreliable)
-- Use the shared `LogLayer` instance from `src/config/logger.config.ts` for
-  all shutdown/startup output — no `console.log`/`console.error` in
-  `server.ts`
-- Must not break `npm run dev` — nodemon restarts should still trigger a
-  clean shutdown+restart, not hang
+<!-- Goals & requirements -->
 
 ## Notes
 
-- No WebSocket implementation exists yet — keep that piece an intentional
-  placeholder referenced in a comment, not implemented logic
-- `env.PORT` is already validated via `env-schema.ts` — don't re-parse or
-  add a fallback like `Number(env.PORT) || 4000`; confirm this matches
-  whatever committed `PORT` default lands from the separate, currently
-  uncommitted PORT changes (`.env.example`, `env-schema.ts`, `server.ts`)
-- Depends on the already-implemented logging feature for
-  `src/config/logger.config.ts` — import the shared `log` instance directly,
-  don't create a second logger instance
-- This is infrastructure, not a `modules/` feature — lives in
-  `src/server.ts` and possibly a new `src/utils/graceful-shutdown.ts`, not
-  under `src/modules/`
+<!-- Any extra notes -->
 
 ## History
 
@@ -56,3 +31,10 @@ In Progress
   (per-request child logger on `c.var.log`), `src/types/hono.ts` (typed
   `Variables`), replaced `console.log` in `server.ts`, and added optional
   `LOG_LEVEL` to `env-schema.ts`
+- Graceful Shutdown — added `src/utils/graceful-shutdown.ts` (`Server` class
+  wrapping startup/shutdown), exported the raw `postgres` client from
+  `src/db/client.ts` for cleanup, wired `SIGTERM`/`SIGINT` (close HTTP
+  server, close DB connection, WS-close placeholder, 10s force-exit
+  timeout) and `uncaughtException`/`unhandledRejection` (log + exit
+  non-zero, no cleanup) handlers, all logged via the shared `LogLayer`
+  instance
