@@ -4,6 +4,7 @@ import { z } from 'zod';
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('production'),
   PORT: z.coerce.number().int().positive().default(4000),
+  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).optional(),
 
   DATABASE_URL: z
     .string()

@@ -1,10 +1,18 @@
-# Current Feature: Logging
+# Logging
 
-## Status
+## Overview
 
-In Progress
+Add structured logging via [LogLayer](https://loglayer.dev), replacing ad-hoc
+`console.log`/`console.error` calls across the codebase (including
+`server.ts`'s graceful shutdown logging). LogLayer has a native Hono
+integration and is transport-agnostic, so this stays Pino-free — dev output
+uses LogLayer's built-in pretty terminal transport, production uses its
+console/JSON transport. No logging *library* lock-in: if we ever want to
+swap the underlying transport (Pino, Winston, Datadog, etc.) later, the
+`log.info()`/`log.error()` call sites in the rest of the codebase never
+change.
 
-## Goals
+## Requirements
 
 - Install `loglayer` and `@loglayer/transport-simple-pretty-terminal`
   (dev-only pretty console output, no Pino dependency)
@@ -56,13 +64,3 @@ In Progress
   (that feature's `console.log` calls should switch to this logger once
   both exist) but can be implemented independently — order doesn't block
   either feature
-
-## History
-
-<!-- Keep this updated. Earliest to latest -->
-
-- Project setup and boilerplate cleanup
-- Zod-validated env config (`src/config/env-schema.ts`, `src/config/env.ts`)
-- Drizzle + local PostgreSQL Setup — installed drizzle-orm/postgres/drizzle-kit,
-  added drizzle.config.ts, src/db/client.ts, src/db/schema/, db:generate/migrate/studio
-  scripts, and updated env files, .gitignore, and context docs
