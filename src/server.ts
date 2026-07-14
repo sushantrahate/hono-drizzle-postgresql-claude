@@ -8,7 +8,7 @@ import app from './app'
 
 import { env } from './config/env';
 
-const PORT = Number(env.PORT) || 3001;
+const PORT = Number(env.PORT) || 4000;
 
 serve({
   fetch: app.fetch,
