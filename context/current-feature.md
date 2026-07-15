@@ -1,50 +1,16 @@
-# Current Feature: Biome Setup
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Install `@biomejs/biome` as a dev dependency, pinned exact version (`--save-exact`)
-- Run `npx @biomejs/biome init` and configure `biome.json`:
-  - `formatter`: enabled, 2-space indent, line width 100
-  - `linter`: enabled, `recommended` rule set
-  - `javascript.formatter`: single quotes, semicolons always
-  - `assist.actions.source.organizeImports`: enabled
-  - `files.includes`: v2 glob syntax (`**` plus `!**/dist/**`,
-    `!**/node_modules/**`, `!**/src/db/migrations/**`, `!**/coverage/**`) —
-    not `files.ignore`, which is deprecated in Biome 2.x
-- Update `package.json` scripts: `lint` (`biome check .`), `lint:fix`
-  (`biome check --write .`), `format` (`biome format --write .`)
-- Install `husky` and `lint-staged` as dev dependencies, run `npx husky init`
-- Configure `lint-staged` in `package.json`:
-  `"**/*.{ts,json}": ["biome check --write --no-errors-on-unmatched"]`
-- Wire two Husky hooks:
-  - `.husky/pre-commit` → `npx lint-staged`
-  - `.husky/pre-push` → `npm run lint && npm run test && npm run build`
-- Configure `.vscode/settings.json` for format-on-save via the Biome
-  extension (`editor.defaultFormatter: biomejs.biome`, code-actions-on-save)
-- Document the lint/format setup in `context/coding-standards.md` and
-  `README.md`
-- Confirm `npm run lint` and `npm run format` run clean across the existing
-  codebase
+<!-- Bullet points of what success looks like -->
 
 ## Notes
 
-- Biome does not do full type-aware linting — `tsc` (via `build`) already
-  catches type-flow issues separately; this is a deliberate trade-off, not
-  an oversight
-- If a needed lint rule has no Biome equivalent, note it here rather than
-  layering in another lint tool alongside Biome
-- Infrastructure, not a `modules/` feature — touches `biome.json`,
-  `package.json`, `.husky/`, `.vscode/`, `context/coding-standards.md`
-- No dependency on other in-flight work — safe to implement independently;
-  doing it now (before more modules accumulate) means less to reconcile
-  against Biome's formatting opinions later
-- lint-staged glob (`**/*.{ts,json}`) doesn't cover `.tsx` — moot today (no
-  `.tsx` files exist), but revisit if `hono/jsx` handlers get added, since
-  `tsconfig.json` already sets `jsx: "react-jsx"`
+<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
@@ -119,3 +85,25 @@ In Progress
   `tsconfig.build.json` excludes test files and Vitest doesn't type-check —
   worked around with a small `buildPostgresError(code, message)` test
   helper. Unblocks the upcoming user-module CRUD feature.
+- Biome Setup — installed `@biomejs/biome` 2.5.4 (exact) as the single
+  lint+format tool; added `biome.json` (2-space/100-width formatter, single
+  quotes, `recommended` lint preset, `organizeImports` assist, `files.includes`
+  v2 glob syntax excluding `dist/`, `src/db/migrations/`, `.claude/`, with
+  `vcs.useIgnoreFile` covering `coverage/`/`node_modules` automatically via
+  `.gitignore`); added `lint`/`lint:fix`/`format` npm scripts. Installed
+  `husky` + `lint-staged`, wired `.husky/pre-commit` (`npx lint-staged` on
+  staged `*.ts`/`*.json`) and `.husky/pre-push` (`lint && test && build`).
+  Added `.vscode/settings.json` (format-on-save, code-actions-on-save) and
+  `.vscode/extensions.json` (recommends the Biome extension) — discovered
+  along the way that `.gitignore`'s blanket `.vscode/*` rule was silently
+  swallowing both files, so added explicit `!.vscode/settings.json` /
+  `!.vscode/extensions.json` exceptions. Added `.gitattributes`
+  (`* text=auto eol=lf`) to normalize line endings, since the repo had no
+  line-ending policy and Windows CRLF checkouts fought Biome's LF-default
+  formatter. Fixed two real lint findings surfaced by the new linter: `fs` →
+  `node:fs` (`useNodejsImportProtocol`) in `drizzle.config.ts`/`env.ts`, and
+  a documented `biome-ignore` on the one legitimate `noNonNullAssertion`
+  (`DATABASE_URL!` in `drizzle.config.ts`). Documented in
+  `coding-standards.md` (new "Lint & Format" section) and `README.md`
+  (Scripts table). `npm run lint`, `format`, `build`, and `test` all verified
+  clean before merge.
