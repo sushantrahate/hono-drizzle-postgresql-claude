@@ -45,5 +45,8 @@
     "**/*.{ts,json}": [
       "biome check --write --no-errors-on-unmatched"
     ]
+  },
+  "overrides": {
+    "esbuild": "^0.25.4"
   }
 }
