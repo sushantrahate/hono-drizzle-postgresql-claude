@@ -1,49 +1,16 @@
-# Current Feature: Error Handling Middleware
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Add `src/errors/app-error.ts` — typed error hierarchy: `AppError` (base,
-  carries `statusCode`/`message`), `NotFoundError` (404), `ConflictError`
-  (409), `ValidationError` (400), `UnauthorizedError` (401, unused for now)
-- Add `src/middleware/error-handler.middleware.ts`, wired via
-  `app.onError(...)` in `app.ts` (not `app.use(...)`)
-- Mapping order in the error handler:
-  1. `AppError` (or subclass) → `unifiedResponse(false, error.message)` with
-     `error.statusCode`
-  2. `PostgresError` (from the `postgres` driver) → map `23505` (unique
-     violation) to 409 conflict, structured so more codes can be added later
-  3. `HTTPException` (already used for the 504 timeout) → pass through
-     `error.getResponse()`
-  4. Anything else → log full error server-side via `c.var.log.error(...)`,
-     return generic `unifiedResponse(false, 'Internal server error')` 500 —
-     never leak the real error/stack
-- Add `app.notFound(...)` in `app.ts` → `unifiedResponse(false, 'Not found')`
-  404
-- Wire `app.onError(errorHandler)` and `app.notFound(notFoundHandler)` near
-  the bottom of `app.ts`, before `export default app;`, with a comment
-  noting they're global fallbacks, not pipeline stages
-- Add `src/middleware/error-handler.middleware.test.ts` — minimal Hono app
-  with the handler wired, routes throwing each error type (`AppError`
-  subclass, `PostgresError`-shaped with `code: '23505'`, generic `Error`,
-  `HTTPException`), asserting status + `unifiedResponse` body shape for each
-  branch, plus an undefined-route 404 case
+<!-- Bullet points of what success looks like -->
 
 ## Notes
 
-- Shared infra (not a `modules/` feature) — lives in `src/errors/`,
-  `src/middleware/`, `src/app.ts`
-- Depends on `uni-response` and `c.var.log` (both already in place)
-- Import `PostgresError` from `postgres` (driver already installed) — don't
-  redefine it
-- Blocks the upcoming user-module CRUD feature — its service/repository
-  layer will throw `NotFoundError`/`ConflictError` and expects this
-  middleware to translate them, keeping `user.handler.ts` free of try/catch
-- Out of scope: ESLint/Prettier/Husky setup, auth-specific error handling
-  beyond having `UnauthorizedError` available
+<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
@@ -97,3 +64,24 @@ In Progress
   resolution for Vitest). Added a smoke test
   (`src/config/security.config.test.ts`) proving the runner and alias work
   end-to-end, since no `user` module exists yet to test directly.
+- Error Handling Middleware — added `src/errors/app-error.ts` (framework-
+  agnostic `AppError` base + `NotFoundError`/`ConflictError`/
+  `ValidationError`/`UnauthorizedError` subclasses, plain `number`
+  `statusCode` so `service.ts` files can throw these without importing
+  Hono), and `src/middleware/error-handler.middleware.ts` exporting
+  `errorHandler` (wired via `app.onError`, not `app.use`) and
+  `notFoundHandler` (wired via `app.notFound`). Mapping order: `AppError`
+  subclass → its status/message; `postgres.PostgresError` `23505` (unique
+  violation) → 409 via a lookup table structured for more codes later;
+  `HTTPException` → `.getResponse()`; anything else → logged via
+  `c.var.log.withError(...)` and a generic 500 that never leaks the real
+  error. Both wired near the bottom of `app.ts` with a comment noting
+  they're global fallbacks outside the numbered middleware pipeline. Added
+  `src/middleware/error-handler.middleware.test.ts` covering all branches
+  including the unmapped-Postgres-code fallthrough; discovered along the
+  way that `postgres`'s TS types only expose the inherited
+  `Error(message?, options?)` constructor (not the driver's real
+  object-literal constructor), invisible to `npm run build` since
+  `tsconfig.build.json` excludes test files and Vitest doesn't type-check —
+  worked around with a small `buildPostgresError(code, message)` test
+  helper. Unblocks the upcoming user-module CRUD feature.
