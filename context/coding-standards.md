@@ -74,6 +74,73 @@
 - Constants: SCREAMING_SNAKE_CASE
 - Types/Interfaces: PascalCase (no `I` prefix)
 
+## Comments & Documentation
+
+**No file is exempt.** Every file — including infrastructure/wiring files
+like `app.ts`, `server.ts`, and `config/*.ts` — must be understandable to
+someone reading it top to bottom with zero prior context. If a reviewer has
+to ask "what does this block do" or "why is this here," that's a missing
+comment, not an acceptable gap.
+
+### Exported functions / methods
+
+TSDoc comment (`/** ... */`) on every exported function, service method,
+repository interface method, and handler method — types describe the
+*shape* of data, comments describe the *intent*.
+```ts
+/**
+ * Creates a new user after verifying the email isn't already taken.
+ * @param dto - validated user creation payload
+ * @returns the newly created user
+ * @throws {Error} EMAIL_ALREADY_IN_USE if the email is already registered
+ */
+async createUser(dto: CreateUserDTO): Promise<User> { ... }
+```
+
+### Routes
+
+One-line comment above every route registration in `routes.ts` — method,
+path, short description:
+```ts
+// POST /tasks — create a task; userId must reference an existing user
+taskRoutes.post('/', zValidator('json', createTaskSchema), taskHandler.createTask);
+```
+
+### Infrastructure / wiring files (`app.ts`, `server.ts`, `config/*.ts`)
+
+These files are almost pure side effects and ordering — the "why this order"
+is the whole point, so comment accordingly:
+- A short comment above each `app.use(...)` block stating what the
+  middleware does and, if order matters, why it's positioned where it is
+  relative to the others
+- A comment on any config object explaining non-obvious values (e.g. why a
+  CSP directive is scoped the way it is, why a timeout is set to a specific
+  duration)
+- Group related middleware visually with a one-line section comment if the
+  file has more than ~4-5 `app.use()` calls, so the request pipeline reads
+  top-to-bottom like a checklist
+
+### General rule — comment the "why," not the "what"
+
+Code already shows *what* it does; a comment restating that is noise.
+Reserve comments for:
+- Non-obvious business rules ("can't transition done → in_progress")
+- Reasons behind a workaround, edge case, or ordering decision
+- Anything a future reader (including yourself in 6 months) would
+  reasonably ask "wait, why is this here?" about
+- Bad: `// increment counter` above `counter++`
+- Good: `// Postgres returns unique violations as 23505, not a typed error`
+
+### Other rules
+
+- **Zod schemas**: add a `.describe('...')` or an adjacent comment on any
+  field whose validation rule isn't self-evident from its name/type alone
+- **TODOs** must include enough context to act on later — `// TODO: <what
+  and why>`, not a bare `// TODO`. The `/cleanup` skill flags stale/vague
+  TODOs, so treat this as enforced, not optional.
+- Comments should add information the code doesn't already convey — don't
+  add a file-header banner that just restates the filename/class name
+
 ## Testing
 
 - Vitest, colocated as `<feature>.test.ts` per module
