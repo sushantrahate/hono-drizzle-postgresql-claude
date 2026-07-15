@@ -53,3 +53,11 @@ server instance and the `postgres.js` client from `src/db/client.ts`.
 - This is infrastructure, not a `modules/` feature — lives in `src/server.ts`
   and possibly a new `src/utils/graceful-shutdown.ts`, not under
   `src/modules/`
+
+## Known limitation: `npm run dev` on Windows
+
+`tsx watch` relays Ctrl+C to its child via `child.kill()`, which Windows
+can't deliver as a real signal — so our handler never fires and no shutdown
+logs print. Confirmed via direct `npx tsx src/server.ts` (no watch wrapper),
+which works fine. Not a bug; unaffected in production (`npm run start`,
+Docker/Linux).
