@@ -1,6 +1,7 @@
 // src/config/logger.config.ts
-import { ConsoleTransport, LogLayer } from 'loglayer';
+
 import { getSimplePrettyTerminal } from '@loglayer/transport-simple-pretty-terminal';
+import { ConsoleTransport, LogLayer } from 'loglayer';
 
 import { env } from './env';
 

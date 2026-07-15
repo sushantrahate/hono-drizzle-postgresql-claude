@@ -1,5 +1,5 @@
 // src/utils/graceful-shutdown.ts
-import { serve, type ServerType } from '@hono/node-server';
+import { type ServerType, serve } from '@hono/node-server';
 
 import app from '../app';
 import { env } from '../config/env';
@@ -70,7 +70,9 @@ export class Server {
       client
         .end()
         .then(() => log.info('Database connection closed'))
-        .catch((dbErr: unknown) => log.withError(dbErr).error('Error while closing database connection'))
+        .catch((dbErr: unknown) =>
+          log.withError(dbErr).error('Error while closing database connection'),
+        )
         .finally(() => {
           clearTimeout(forceExitTimer);
           log.info('Graceful shutdown complete');

@@ -1,7 +1,8 @@
 // src/config/env.ts
-import fs from 'fs';
+
+import fs from 'node:fs';
 import dotenv from 'dotenv';
-import { envSchema, type EnvVars } from './env-schema';
+import { type EnvVars, envSchema } from './env-schema';
 
 /** Map NODE_ENV to local .env file suffixes */
 const toFileSuffix = (env?: string) => {
@@ -25,11 +26,7 @@ const envFile = `.env.${suffix}`;
 
 if (fs.existsSync(envFile)) {
   dotenv.config({ path: envFile });
-  console.log(
-    `- Loaded environment: ${envFile}\n- NODE_ENV: ${
-      process.env.NODE_ENV ?? '(unset)'
-    }`
-  );
+  console.log(`- Loaded environment: ${envFile}\n- NODE_ENV: ${process.env.NODE_ENV ?? '(unset)'}`);
 } else {
   if (suffix === 'prod') {
     console.log('- Using process.env for production configuration.');
@@ -52,9 +49,7 @@ if (!parsed.success) {
     return `- ${key}: ${i.message}`;
   });
 
-  console.error(
-    `\n❌ Invalid environment variables:\n${messages.join('\n')}\n`
-  );
+  console.error(`\n❌ Invalid environment variables:\n${messages.join('\n')}\n`);
   process.exit(1); // ⛔ Stop here if envs are bad
 }
 
@@ -151,8 +146,7 @@ const systemVars = new Set([
   'PUPPETEER_SKIP_DOWNLOAD',
 ]);
 
-const sensitiveNamePattern =
-  /(SECRET|TOKEN|PASSWORD|PASS|PRIVATE|CREDENTIAL|ACCESS|KEY|AUTH)/i;
+const sensitiveNamePattern = /(SECRET|TOKEN|PASSWORD|PASS|PRIVATE|CREDENTIAL|ACCESS|KEY|AUTH)/i;
 
 const isNoiseKey = (k: string) =>
   systemVars.has(k) ||
@@ -161,22 +155,16 @@ const isNoiseKey = (k: string) =>
   k.startsWith('MINGW') ||
   k.startsWith('WT_');
 
-const extraKeys = definedEnvKeys.filter(
-  (k) => !allowedKeys.includes(k) && !isNoiseKey(k)
-);
+const extraKeys = definedEnvKeys.filter((k) => !allowedKeys.includes(k) && !isNoiseKey(k));
 
 if (env.NODE_ENV !== 'production' && extraKeys.length > 0) {
-  const visibleExtraKeys = extraKeys.filter(
-    (k) => !sensitiveNamePattern.test(k)
-  );
+  const visibleExtraKeys = extraKeys.filter((k) => !sensitiveNamePattern.test(k));
   const hiddenCount = extraKeys.length - visibleExtraKeys.length;
   const details = [
     visibleExtraKeys.length
       ? `unused environment variables detected: ${visibleExtraKeys.join(', ')}`
       : null,
-    hiddenCount
-      ? `${hiddenCount} sensitive-looking extra env var(s) hidden`
-      : null,
+    hiddenCount ? `${hiddenCount} sensitive-looking extra env var(s) hidden` : null,
   ]
     .filter(Boolean)
     .join('; ');

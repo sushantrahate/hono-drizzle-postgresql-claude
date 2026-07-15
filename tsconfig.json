@@ -7,16 +7,14 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "removeComments": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "rootDir": "./src",
     "outDir": "./dist",
     "paths": {
       "@/*": ["./src/*"]
-    },
+    }
   },
   "exclude": ["node_modules", "drizzle.config.ts", "vitest.config.ts"]
 }

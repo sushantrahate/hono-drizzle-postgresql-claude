@@ -40,7 +40,7 @@ app.use(
     xContentTypeOptions: 'nosniff',
     referrerPolicy: 'no-referrer',
     strictTransportSecurity: env.NODE_ENV === 'production', // HSTS is meaningless over local HTTP
-  })
+  }),
 );
 
 // 4. CORS — restricts which browser origins may call this API.
@@ -61,7 +61,7 @@ app.use(
       c.var.log.warn('Rejected request with oversized body');
       return c.json(unifiedResponse(false, 'Request body too large'), 413);
     },
-  })
+  }),
 );
 
 // 7. Enforce a max request duration so a hung handler/DB query can't hold
@@ -75,8 +75,8 @@ app.use(
           status: 504,
           headers: { 'Content-Type': 'application/json' },
         }),
-      })
-  )
+      }),
+  ),
 );
 
 // --- Routes ---

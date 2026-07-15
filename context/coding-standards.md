@@ -148,6 +148,28 @@ Reserve comments for:
   `repository` interface — no real DB needed
 - Don't write tests just to write them; focus on logic with real branching
 
+## Lint & Format (Biome)
+
+- [Biome](https://biomejs.dev) owns both linting and formatting — one config
+  (`biome.json`), no separate ESLint/Prettier setup
+- `npm run lint` (`biome check .`) verifies formatting, import order, and
+  lint rules; `npm run lint:fix` writes the fixes; `npm run format` runs the
+  formatter alone
+- Style: 2-space indent, 100-char line width, single quotes, semicolons
+  always — enforced by `biome.json`, not manual review
+- Import organization (`assist.actions.source.organizeImports`) runs as part
+  of `biome check`, reinforcing the "no unused imports" rule below
+- `biome.json`'s `linter.rules` uses the `recommended` preset — Biome does
+  **not** do type-aware linting (rules needing real type info), so
+  `npm run build` (`tsc`) remains the source of truth for type-flow issues
+- Enforced automatically: `lint-staged` runs `biome check --write` on
+  staged `*.ts`/`*.json` files at `git commit` (`.husky/pre-commit`);
+  `npm run lint && npm run test && npm run build` all run at `git push`
+  (`.husky/pre-push`)
+- Generated/output paths (`dist/`, `src/db/migrations/`, and anything
+  gitignored like `coverage/`) are excluded via `files.includes` in
+  `biome.json` — never hand-format generated SQL or build output
+
 ## Code Quality
 
 - No commented-out code unless specified

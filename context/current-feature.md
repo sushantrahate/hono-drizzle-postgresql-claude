@@ -1,16 +1,50 @@
-# Current Feature
+# Current Feature: Biome Setup
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Bullet points of what success looks like -->
+- Install `@biomejs/biome` as a dev dependency, pinned exact version (`--save-exact`)
+- Run `npx @biomejs/biome init` and configure `biome.json`:
+  - `formatter`: enabled, 2-space indent, line width 100
+  - `linter`: enabled, `recommended` rule set
+  - `javascript.formatter`: single quotes, semicolons always
+  - `assist.actions.source.organizeImports`: enabled
+  - `files.includes`: v2 glob syntax (`**` plus `!**/dist/**`,
+    `!**/node_modules/**`, `!**/src/db/migrations/**`, `!**/coverage/**`) —
+    not `files.ignore`, which is deprecated in Biome 2.x
+- Update `package.json` scripts: `lint` (`biome check .`), `lint:fix`
+  (`biome check --write .`), `format` (`biome format --write .`)
+- Install `husky` and `lint-staged` as dev dependencies, run `npx husky init`
+- Configure `lint-staged` in `package.json`:
+  `"**/*.{ts,json}": ["biome check --write --no-errors-on-unmatched"]`
+- Wire two Husky hooks:
+  - `.husky/pre-commit` → `npx lint-staged`
+  - `.husky/pre-push` → `npm run lint && npm run test && npm run build`
+- Configure `.vscode/settings.json` for format-on-save via the Biome
+  extension (`editor.defaultFormatter: biomejs.biome`, code-actions-on-save)
+- Document the lint/format setup in `context/coding-standards.md` and
+  `README.md`
+- Confirm `npm run lint` and `npm run format` run clean across the existing
+  codebase
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- Biome does not do full type-aware linting — `tsc` (via `build`) already
+  catches type-flow issues separately; this is a deliberate trade-off, not
+  an oversight
+- If a needed lint rule has no Biome equivalent, note it here rather than
+  layering in another lint tool alongside Biome
+- Infrastructure, not a `modules/` feature — touches `biome.json`,
+  `package.json`, `.husky/`, `.vscode/`, `context/coding-standards.md`
+- No dependency on other in-flight work — safe to implement independently;
+  doing it now (before more modules accumulate) means less to reconcile
+  against Biome's formatting opinions later
+- lint-staged glob (`**/*.{ts,json}`) doesn't cover `.tsx` — moot today (no
+  `.tsx` files exist), but revisit if `hono/jsx` handlers get added, since
+  `tsconfig.json` already sets `jsx: "react-jsx"`
 
 ## History
 

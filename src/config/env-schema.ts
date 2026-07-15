@@ -10,7 +10,7 @@ const commaSeparatedList = (fieldName: string) =>
       v
         .split(',')
         .map((entry) => entry.trim())
-        .filter(Boolean)
+        .filter(Boolean),
     )
     .refine((entries) => entries.length > 0, `${fieldName} must contain at least one entry`);
 
@@ -23,12 +23,15 @@ export const envSchema = z.object({
     .string()
     .min(1, 'DATABASE_URL is required')
     .url('DATABASE_URL must be a valid connection string')
-    .refine((v) => /^postgres(ql)?:\/\//i.test(v), 'DATABASE_URL must start with postgres:// or postgresql://'),
+    .refine(
+      (v) => /^postgres(ql)?:\/\//i.test(v),
+      'DATABASE_URL must start with postgres:// or postgresql://',
+    ),
 
   /** Full origins (scheme + host [+ port]) allowed by CORS, e.g. https://app.example.com */
   ALLOWED_ORIGINS: commaSeparatedList('ALLOWED_ORIGINS').refine(
     (origins) => origins.every((origin) => /^https?:\/\/[^/]+$/i.test(origin)),
-    'ALLOWED_ORIGINS entries must be valid http(s) origins (e.g. https://example.com)'
+    'ALLOWED_ORIGINS entries must be valid http(s) origins (e.g. https://example.com)',
   ),
 
   /** Host names (no scheme) allowed by the Host-header whitelist, e.g. api.example.com */

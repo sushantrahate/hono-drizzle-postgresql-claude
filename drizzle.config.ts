@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'node:fs';
 import { config } from 'dotenv';
 import { defineConfig } from 'drizzle-kit';
 
@@ -28,6 +28,7 @@ export default defineConfig({
   out: './src/db/migrations',
   dialect: 'postgresql',
   dbCredentials: {
+    // biome-ignore lint/style/noNonNullAssertion: standalone CLI script, not routed through the app's Zod-validated env — missing DATABASE_URL should fail loudly here
     url: process.env.DATABASE_URL!,
   },
 });
