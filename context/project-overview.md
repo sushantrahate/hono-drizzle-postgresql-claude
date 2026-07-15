@@ -101,18 +101,18 @@ The shared Drizzle + postgres.js client instance lives at `src/db/client.ts`
 ## 🧭 Roadmap
 
 ### MVP
-- [x] Feature scaffolding pattern proven with a `user` module (reference shape)
-- [x] `task` module speced as the second reference shape (relations + state machine)
 - [x] DB migrations wired end-to-end (Drizzle + PostgreSQL 18 via Docker)
 - [x] Structured logging (LogLayer)
 - [x] Graceful shutdown
 - [x] Security middleware baseline (headers, rate limit, CORS, host whitelist)
+- [x] `TRUST_PROXY` env var + correct client IP handling behind a reverse proxy
 - [x] Vitest test runner configured
-- [x] Biome for lint/format
+- [x] Centralized error-handling middleware
+- [x] Biome for lint/format (+ Husky/lint-staged git hooks)
+- [ ] First real feature module (`user`) proving the hexagonal-lite shape end-to-end
 - [ ] Auth (JWT or session, TBD per project)
 
 ### Next
-- [ ] `TRUST_PROXY` env var + correct client IP handling behind a reverse proxy
 - [ ] Dependabot config + `SECURITY.md`
 - [ ] Additional feature modules as real projects need them
 
@@ -122,5 +122,7 @@ The shared Drizzle + postgres.js client instance lives at `src/db/client.ts`
 
 - In active development — hexagonal-lite architecture finalized, AI
   workflow (`/feature`, `/cleanup`) wired in, infrastructure layer
-  (logging, graceful shutdown, security, testing, lint/format) speced and
-  being implemented module by module
+  (config/env, DB client, logging, graceful shutdown, security, testing,
+  error handling, lint/format) fully implemented under `src/`. No feature
+  module exists yet under `src/modules/` — the `user` module described in
+  Architecture above is the target shape for the next feature, not yet built.
