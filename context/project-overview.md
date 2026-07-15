@@ -74,6 +74,10 @@ The shared Drizzle + postgres.js client instance lives at `src/db/client.ts`
 
 ## 🛠️ Infrastructure
 
+- **Response messages**: shared `SUCCESS`/`ERROR` string constants at
+  `src/constants/messages.constants.ts` — handlers/middleware pass these into
+  `unifiedResponse(...)` instead of inlining string literals, so wording
+  stays consistent and changes in one place
 - **Logging**: shared `LogLayer` instance at `src/config/logger.config.ts`;
   per-request child logger attached via `src/middleware/request-logger.middleware.ts`
   and available as `c.var.log` (typed via `src/types/hono.ts`)

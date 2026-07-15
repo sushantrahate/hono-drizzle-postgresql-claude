@@ -6,6 +6,7 @@ import { unifiedResponse } from 'uni-response';
 
 import { env } from '../config/env';
 import { RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_MS } from '../config/security.config';
+import { ERROR } from '../constants/messages.constants';
 import type { AppVariables } from '../types/hono';
 
 /**
@@ -28,7 +29,7 @@ const getClientIp = (c: Context): string => {
 
 const tooManyRequests = (c: Context) => {
   c.var.log.warn(`Rate limit exceeded for client IP: ${getClientIp(c)}`);
-  return c.json(unifiedResponse(false, 'Too many requests, please try again later'), 429);
+  return c.json(unifiedResponse(false, ERROR.TOO_MANY_REQUESTS), 429);
 };
 
 /** Creates a rate limiter with the given window/limit, keyed by client IP */

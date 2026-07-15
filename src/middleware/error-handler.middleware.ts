@@ -5,6 +5,7 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import postgres from 'postgres';
 import { unifiedResponse } from 'uni-response';
 
+import { ERROR } from '../constants/messages.constants';
 import { AppError } from '../errors/app-error';
 import type { AppVariables } from '../types/hono';
 
@@ -28,7 +29,7 @@ export function errorHandler(error: Error, c: Context<{ Variables: AppVariables 
   if (error instanceof postgres.PostgresError) {
     const status = POSTGRES_ERROR_STATUS[error.code];
     if (status) {
-      return c.json(unifiedResponse(false, 'Conflict'), status);
+      return c.json(unifiedResponse(false, ERROR.CONFLICT), status);
     }
   }
 
@@ -37,9 +38,9 @@ export function errorHandler(error: Error, c: Context<{ Variables: AppVariables 
   }
 
   c.var.log.withError(error).error('Unhandled error');
-  return c.json(unifiedResponse(false, 'Internal server error'), 500);
+  return c.json(unifiedResponse(false, ERROR.INTERNAL_SERVER_ERROR), 500);
 }
 
 /** Wired via `app.notFound(...)` for requests that don't match any route. */
 export const notFoundHandler: NotFoundHandler<{ Variables: AppVariables }> = (c) =>
-  c.json(unifiedResponse(false, 'Not found'), 404);
+  c.json(unifiedResponse(false, ERROR.ROUTE_NOT_FOUND), 404);

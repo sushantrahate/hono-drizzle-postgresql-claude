@@ -8,6 +8,7 @@ import { unifiedResponse } from 'uni-response';
 
 import { env } from './config/env';
 import { BODY_SIZE_LIMIT_BYTES, REQUEST_TIMEOUT_MS } from './config/security.config';
+import { ERROR } from './constants/messages.constants';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.middleware';
 import { hostWhitelist } from './middleware/host-whitelist.middleware';
 import { globalRateLimiter } from './middleware/rate-limiter.middleware';
@@ -59,7 +60,7 @@ app.use(
     maxSize: BODY_SIZE_LIMIT_BYTES,
     onError: (c) => {
       c.var.log.warn('Rejected request with oversized body');
-      return c.json(unifiedResponse(false, 'Request body too large'), 413);
+      return c.json(unifiedResponse(false, ERROR.REQUEST_BODY_TOO_LARGE), 413);
     },
   }),
 );
@@ -71,7 +72,7 @@ app.use(
     REQUEST_TIMEOUT_MS,
     () =>
       new HTTPException(504, {
-        res: new Response(JSON.stringify(unifiedResponse(false, 'Request timed out')), {
+        res: new Response(JSON.stringify(unifiedResponse(false, ERROR.REQUEST_TIMED_OUT)), {
           status: 504,
           headers: { 'Content-Type': 'application/json' },
         }),

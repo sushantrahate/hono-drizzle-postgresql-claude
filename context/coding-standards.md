@@ -38,6 +38,11 @@
 - HTTP status codes are **not** part of the response body — `uni-response` is
   framework-agnostic by design, so status is always the second argument to
   `c.json(...)`, decided by the handler, not embedded in the response shape
+- Message strings passed as the second argument live in
+  `src/constants/messages.constants.ts` (`SUCCESS` / `ERROR` objects) —
+  don't inline new message string literals in a handler/middleware/service;
+  add a key there and import it, so wording stays consistent and only needs
+  to change in one place
 - Examples:
   ```ts
   // success with data

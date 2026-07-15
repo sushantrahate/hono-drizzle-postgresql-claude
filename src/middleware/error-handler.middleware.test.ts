@@ -84,6 +84,9 @@ describe('errorHandler', () => {
   it('returns a 404 unifiedResponse shape for an undefined route', async () => {
     const res = await buildApp().request('/does-not-exist');
     expect(res.status).toBe(404);
-    expect(await res.json()).toMatchObject({ success: false, message: 'Not found' });
+    expect(await res.json()).toMatchObject({
+      success: false,
+      message: 'Route not found or wrong API method',
+    });
   });
 });
