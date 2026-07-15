@@ -1,12 +1,49 @@
-# Current Feature
+# Current Feature: Error Handling Middleware
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
+- Add `src/errors/app-error.ts` — typed error hierarchy: `AppError` (base,
+  carries `statusCode`/`message`), `NotFoundError` (404), `ConflictError`
+  (409), `ValidationError` (400), `UnauthorizedError` (401, unused for now)
+- Add `src/middleware/error-handler.middleware.ts`, wired via
+  `app.onError(...)` in `app.ts` (not `app.use(...)`)
+- Mapping order in the error handler:
+  1. `AppError` (or subclass) → `unifiedResponse(false, error.message)` with
+     `error.statusCode`
+  2. `PostgresError` (from the `postgres` driver) → map `23505` (unique
+     violation) to 409 conflict, structured so more codes can be added later
+  3. `HTTPException` (already used for the 504 timeout) → pass through
+     `error.getResponse()`
+  4. Anything else → log full error server-side via `c.var.log.error(...)`,
+     return generic `unifiedResponse(false, 'Internal server error')` 500 —
+     never leak the real error/stack
+- Add `app.notFound(...)` in `app.ts` → `unifiedResponse(false, 'Not found')`
+  404
+- Wire `app.onError(errorHandler)` and `app.notFound(notFoundHandler)` near
+  the bottom of `app.ts`, before `export default app;`, with a comment
+  noting they're global fallbacks, not pipeline stages
+- Add `src/middleware/error-handler.middleware.test.ts` — minimal Hono app
+  with the handler wired, routes throwing each error type (`AppError`
+  subclass, `PostgresError`-shaped with `code: '23505'`, generic `Error`,
+  `HTTPException`), asserting status + `unifiedResponse` body shape for each
+  branch, plus an undefined-route 404 case
+
 ## Notes
+
+- Shared infra (not a `modules/` feature) — lives in `src/errors/`,
+  `src/middleware/`, `src/app.ts`
+- Depends on `uni-response` and `c.var.log` (both already in place)
+- Import `PostgresError` from `postgres` (driver already installed) — don't
+  redefine it
+- Blocks the upcoming user-module CRUD feature — its service/repository
+  layer will throw `NotFoundError`/`ConflictError` and expects this
+  middleware to translate them, keeping `user.handler.ts` free of try/catch
+- Out of scope: ESLint/Prettier/Husky setup, auth-specific error handling
+  beyond having `UnauthorizedError` available
 
 ## History
 

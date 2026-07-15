@@ -8,6 +8,7 @@ import { unifiedResponse } from 'uni-response';
 
 import { env } from './config/env';
 import { BODY_SIZE_LIMIT_BYTES, REQUEST_TIMEOUT_MS } from './config/security.config';
+import { errorHandler, notFoundHandler } from './middleware/error-handler.middleware';
 import { hostWhitelist } from './middleware/host-whitelist.middleware';
 import { globalRateLimiter } from './middleware/rate-limiter.middleware';
 import { requestLogger } from './middleware/request-logger.middleware';
@@ -83,5 +84,12 @@ app.use(
 app.get('/', (c) => {
   return c.text('Hello Hono!');
 });
+
+// --- Global fallbacks ---
+// Not part of the numbered middleware pipeline above — Hono's error boundary
+// (onError) and unmatched-route handler (notFound) run outside app.use(),
+// so there's no "position relative to the other stages" to reason about.
+app.onError(errorHandler);
+app.notFound(notFoundHandler);
 
 export default app;
