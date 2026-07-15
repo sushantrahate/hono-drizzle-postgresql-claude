@@ -131,3 +131,14 @@ which numbered items to fix before touching anything. It audits things like:
 - missing files in a module's expected shape, or repositories/services wired inline in a handler instead of `routes.ts`
 - schema files newer than the latest Drizzle migration (uncommitted drift)
 
+### `code-reviewer` subagent
+
+A read-only agent (`.claude/agents/code-reviewer.md`, Read/Grep/Glob only —
+never edits) for a fresh-eyes pass after implementing or editing code,
+before committing, or whenever asked to scan/review the codebase. It reads
+`coding-standards.md`/`project-overview.md` first, then checks (in priority
+order) layer-boundary violations, response-format compliance, documentation,
+error handling, validation, testing, general code quality, and a light
+security pass — reporting concrete findings grouped by category without
+making any changes itself.
+

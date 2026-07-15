@@ -107,3 +107,12 @@ Not Started
   `coding-standards.md` (new "Lint & Format" section) and `README.md`
   (Scripts table). `npm run lint`, `format`, `build`, and `test` all verified
   clean before merge.
+- `code-reviewer` subagent — added `.claude/agents/code-reviewer.md`
+  (Read/Grep/Glob only, no edits) for a fresh-eyes review pass after
+  implementing/editing code or before committing. Checks, in priority
+  order: layer-boundary violations, response-format compliance,
+  documentation, error handling, validation, testing, general code
+  quality, and a light security pass, judged against this project's own
+  `coding-standards.md`/`project-overview.md` rules rather than generic
+  best practices. Documented in `project-overview.md` (Development
+  Workflow) and `README.md` (AI-Assisted Feature Workflow).

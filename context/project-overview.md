@@ -98,6 +98,10 @@ The shared Drizzle + postgres.js client instance lives at `src/db/client.ts`
   explain → complete
 - Run `/cleanup check` periodically for housekeeping (stale TODOs, unused
   imports, layer-boundary violations, env/schema drift)
+- Use the `code-reviewer` subagent (`.claude/agents/code-reviewer.md`,
+  read-only) proactively after implementing/editing code and before
+  committing, for a fresh-eyes pass against this project's architecture and
+  standards
 - Conventional commits (`feat:`, `fix:`, `chore:`)
 
 ---
