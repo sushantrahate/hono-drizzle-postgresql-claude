@@ -25,7 +25,30 @@
 
 - All request input validated with Zod in `<feature>.schema.ts` before
   reaching the service layer
-- Return validation errors via `uni-response`, never a raw thrown Zod error
+- Return validation errors via `unifiedResponse(false, ...)`, never a raw
+  thrown Zod error — see Response Format below
+
+## Response Format
+
+- All handler responses use `unifiedResponse(...)` from `uni-response`,
+  wrapped directly in `c.json(...)` — no custom response wrapper file
+- Signature: `unifiedResponse(success, message, data?, error?, metadata?, extraFields?)`
+  — positional, so only pass the params actually needed and stop there
+  (don't pass `undefined` placeholders just to reach a later param)
+- HTTP status codes are **not** part of the response body — `uni-response` is
+  framework-agnostic by design, so status is always the second argument to
+  `c.json(...)`, decided by the handler, not embedded in the response shape
+- Examples:
+  ```ts
+  // success with data
+  c.json(unifiedResponse(true, 'User created successfully', user), 201)
+
+  // success with no data
+  c.json(unifiedResponse(true, 'User deleted successfully'))
+
+  // failure
+  c.json(unifiedResponse(false, 'User not found'), 404)
+  ```
 
 ## Database (Drizzle)
 
@@ -40,7 +63,8 @@
 - Services throw typed errors (plain `Error` subclasses is fine — no need for
   a full domain error hierarchy)
 - Centralized error middleware translates errors + Postgres error codes
-  (e.g. `23505` unique violation) into `uni-response` failure shapes
+  (e.g. `23505` unique violation) into `unifiedResponse(false, ...)` failure
+  shapes
 - Handlers never leak raw stack traces or ORM errors to the client
 
 ## Naming
