@@ -20,6 +20,7 @@ for conventions.
 ### 🎯 Development & Code Quality
 
 ✅ Clean Architecture, Framework-Agnostic Design – Each feature module keeps its routes, handler, service, repository (port + adapter), schema, and types together, with business logic isolated from Hono and Drizzle\
+✅ `user` feature module – full CRUD reference implementation (see [API Endpoints](#-api-endpoints)) proving the module shape end-to-end\
 ✅ Biome – Single tool for linting, formatting, and import organization (no separate ESLint/Prettier setup)\
 ✅ Zod validation – Strict schema validation for request bodies and environment variables\
 
@@ -47,6 +48,196 @@ for conventions.
 
 ✅ Graceful shutdown – Closes the HTTP server and DB connection on `SIGTERM`/`SIGINT`, logs and exits non-zero on uncaught exceptions
 
+## 📂 Project Structure
+
+```
+src/
+├── app.ts                    # Hono app: middleware pipeline, route mounting, error boundary
+├── server.ts                 # @hono/node-server entrypoint + graceful shutdown wiring
+├── config/                   # Env validation (Zod), logger, security thresholds
+├── constants/                # SUCCESS/ERROR message strings
+├── db/
+│   ├── client.ts              # Shared Drizzle + postgres.js client
+│   ├── schema/                 # Tables shared across modules (empty until one exists)
+│   └── migrations/              # drizzle-kit generate output — never hand-edited
+├── errors/                   # AppError + typed subclasses (NotFoundError, ConflictError, ...)
+├── middleware/                # Host whitelist, rate limiter, request logger, centralized error handler
+├── types/                    # Shared Hono types (e.g. AppVariables for c.var.log)
+├── utils/                    # Graceful shutdown
+└── modules/
+    └── user/                  # one folder per feature — see Layer-by-Layer Breakdown below
+        ├── user.types.ts
+        ├── user.repository.ts
+        ├── user.repository.drizzle.ts
+        ├── user.service.ts
+        ├── user.schema.ts
+        ├── user.handler.ts
+        ├── user.routes.ts
+        └── user.test.ts
+```
+
+Unlike a layer-based structure (global `controllers/`, `services/`, `repositories/`
+folders), this boilerplate is **feature-based**: every file for "users" lives
+together under `modules/user/`. Adding a second feature means adding a second
+folder — nothing under `modules/user/` changes.
+
+## 📌 Layer-by-Layer Breakdown
+
+### 1️⃣ Feature Modules (`modules/<feature>/`)
+
+Each feature is self-contained — everything related to "users" lives inside
+`src/modules/user/`.
+
+🎯 Benefit:\
+💡 You can add or remove a feature by adding or deleting one folder, without
+touching any other feature.
+
+🔹 **No Cluttering, Even as the Project Grows Large** – related files stay
+together instead of scattering across global `controllers/`/`services/`/`repositories/`
+folders.\
+🔹 **Everything in One Place** – all logic for a feature (routes, handler,
+service, repository, schema, types) lives in a single folder.\
+🔹 **No Ambiguity in Large Systems** – with dozens of features, there's never
+a question of which handler/service/repository belongs to which — the folder
+name says it.\
+🔹 **Scalability & Maintainability** – a new feature is a new folder under
+`modules/`, with zero edits to unrelated modules.
+
+### 2️⃣ Handlers (`<feature>.handler.ts`)
+
+✅ The only file in the module allowed to import Hono's `Context`\
+✅ Calls the service layer for business logic\
+✅ Wraps every response in `unifiedResponse(...)` — thin, no business logic
+
+📄 Example: `user.handler.ts`
+
+```ts
+export class UserHandler {
+  constructor(private readonly userService: UserService) {}
+
+  createUser = async (c: Context<Env, '/', JsonBody<typeof createUserSchema>>) => {
+    const input = c.req.valid('json');
+    const user = await this.userService.createUser(input);
+    return c.json(unifiedResponse(true, SUCCESS.USER_CREATED, user), 201);
+  };
+}
+```
+
+#### 🛠️ Why This Structure?
+
+Hono-specific logic (`Context`, status codes, `unifiedResponse`) stays here —
+business logic lives in the service layer, which stays framework-agnostic.
+
+🎯 Benefit:\
+💡 Swapping Hono for another framework means rewriting `handler.ts`/`routes.ts`
+only — `service.ts` and `repository.ts` don't change.
+
+### 3️⃣ Services (`<feature>.service.ts`)
+
+✅ Contains the feature's business rules\
+✅ Does NOT depend on Hono or Drizzle\
+✅ Depends only on the `repository` interface, never its implementation
+
+📄 Example: `user.service.ts`
+
+```ts
+export class UserService {
+  constructor(private readonly userRepository: UserRepository) {}
+
+  async createUser(input: CreateUserInput): Promise<User> {
+    const email = input.email.toLowerCase();
+    const existing = await this.userRepository.findByEmail(email);
+    if (existing) {
+      throw new ConflictError(ERROR.EMAIL_ALREADY_IN_USE);
+    }
+    return this.userRepository.create({ ...input, email });
+  }
+}
+```
+
+#### 🛠️ Why This Structure?
+
+- No dependency on Hono requests/responses or Drizzle query syntax
+- Throws typed `AppError` subclasses instead of shaping HTTP responses itself
+  — the centralized error middleware translates them
+
+🎯 Benefit:\
+💡 The exact same `UserService` can be unit-tested against a fake in-memory
+repository (see `user.test.ts`), reused in a CLI script, or ported to a
+different framework/ORM without changes.
+
+### 4️⃣ Repositories — Port + Adapter (`<feature>.repository.ts` + `<feature>.repository.drizzle.ts`)
+
+✅ `repository.ts` is a plain interface — the **port** — with zero implementation\
+✅ `repository.drizzle.ts` is the **adapter** — the only file in the module
+allowed to import `drizzle-orm`\
+✅ The service depends on the interface, never the Drizzle class directly
+
+📄 Example: `user.repository.ts` (port)
+
+```ts
+export interface UserRepository {
+  findByEmail(email: string): Promise<User | null>;
+  create(input: CreateUserInput): Promise<User>;
+  // ...
+}
+```
+
+📄 Example: `user.repository.drizzle.ts` (adapter)
+
+```ts
+export class DrizzleUserRepository implements UserRepository {
+  async findByEmail(email: string) {
+    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return user ?? null;
+  }
+  // ...
+}
+```
+
+🎯 Benefit:\
+💡 Swapping Drizzle for another ORM means writing a new class that implements
+`UserRepository` — `service.ts`, `handler.ts`, and every test stay untouched.
+
+### 5️⃣ Schemas (`<feature>.schema.ts`)
+
+✅ Zod schemas validate request bodies/params before anything reaches the service\
+✅ Wired into `routes.ts` via `@hono/zod-validator`, one target (`json`/`param`) per route
+
+📄 Example: `user.schema.ts`
+
+```ts
+export const createUserSchema = z.object({
+  email: z.email(),
+  name: z.string().min(1).optional(),
+});
+```
+
+### 6️⃣ Types (`<feature>.types.ts`)
+
+✅ Plain interfaces (`User`, `CreateUserInput`, `UpdateUserInput`) — no Hono
+or Drizzle types leak in\
+✅ The single shared vocabulary every other layer in the module imports
+
+### 7️⃣ Routes (`<feature>.routes.ts`)
+
+✅ Wires `repository → service → handler` once — the module's composition root\
+✅ Registers each route with its `zValidator` middleware and a one-line comment\
+✅ No business logic — only wiring
+
+📄 Example: `user.routes.ts`
+
+```ts
+const userRepository = new DrizzleUserRepository();
+const userService = new UserService(userRepository);
+const userHandler = new UserHandler(userService);
+
+export const userRoutes = new Hono<{ Variables: AppVariables }>();
+
+// POST /users — create a user; 409 if the email is already registered
+userRoutes.post('/', zValidator('json', createUserSchema), userHandler.createUser);
+```
+
 ## Getting started
 
 ```
@@ -62,6 +253,22 @@ open http://localhost:4000
 
 See [`.env.example`](.env.example) for all required environment variables
 (`DATABASE_URL`, `ALLOWED_ORIGINS`, `ALLOWED_HOSTS`, `TRUST_PROXY`, etc.).
+
+## 📖 API Endpoints
+
+### Users (`src/modules/user`)
+
+The reference CRUD module — every response follows the `unifiedResponse`
+shape (`{ success, message, data? }`); see
+[`coding-standards.md`](context/coding-standards.md) for details.
+
+| Method   | Path         | Description                                                              |
+| -------- | ------------ | ------------------------------------------------------------------------- |
+| `POST`   | `/users`     | Create a user (`email` required, `name` optional). `201`, or `409` if the email is already registered |
+| `GET`    | `/users`     | List all users. `200`                                                    |
+| `GET`    | `/users/:id` | Get a user by id. `200`, or `404` if not found                           |
+| `PATCH`  | `/users/:id` | Update a user's `name`. `200`, or `404` if not found                     |
+| `DELETE` | `/users/:id` | Delete a user. `200`, or `404` if not found                              |
 
 ## Scripts
 

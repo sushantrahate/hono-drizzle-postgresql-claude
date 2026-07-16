@@ -8,7 +8,11 @@
 
 /** Messages for successful (`unifiedResponse(true, ...)`) responses. */
 export const SUCCESS = {
-  // Populated as feature modules land — e.g. USER_CREATED, USER_FOUND.
+  USER_CREATED: 'User created successfully',
+  USERS_RETRIEVED: 'Users retrieved successfully',
+  USER_RETRIEVED: 'User retrieved successfully',
+  USER_UPDATED: 'User updated successfully',
+  USER_DELETED: 'User deleted successfully',
 } as const;
 
 /** Messages for failure (`unifiedResponse(false, ...)`) responses. */
@@ -21,4 +25,6 @@ export const ERROR = {
   TOO_MANY_REQUESTS: 'Too many requests, please try again later',
   REQUEST_BODY_TOO_LARGE: 'Request body too large',
   REQUEST_TIMED_OUT: 'Request timed out',
+  USER_NOT_FOUND: 'User not found',
+  EMAIL_ALREADY_IN_USE: 'Email already in use',
 } as const;

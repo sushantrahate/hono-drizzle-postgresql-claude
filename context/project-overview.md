@@ -36,7 +36,15 @@ knows about Drizzle.
 
 ---
 
-## 🏗️ Architecture — hexagonal-lite
+## 🏗️ Clean Architecture & Framework-Agnostic Design
+
+Business logic stays isolated from the web framework and the ORM — the same
+"dependency rule" behind Robert C. Martin's Clean Architecture and Alistair
+Cockburn's Hexagonal (Ports & Adapters) pattern, which are really two names
+for the same family of idea. This boilerplate uses a lighter-weight version:
+plain interfaces instead of rich domain entities, Zod validation at the edge
+instead of value objects — enough structure to keep the framework and the
+ORM swappable, without full Clean Architecture/DDD ceremony.
 
 ```
 modules/<feature>/
@@ -117,7 +125,7 @@ The shared Drizzle + postgres.js client instance lives at `src/db/client.ts`
 - [x] Vitest test runner configured
 - [x] Centralized error-handling middleware
 - [x] Biome for lint/format (+ Husky/lint-staged git hooks)
-- [ ] First real feature module (`user`) proving the hexagonal-lite shape end-to-end
+- [x] First real feature module (`user`) proving this Clean Architecture shape end-to-end
 - [ ] Auth (JWT or session, TBD per project)
 
 ### Next
@@ -128,9 +136,9 @@ The shared Drizzle + postgres.js client instance lives at `src/db/client.ts`
 
 ## 📌 Status
 
-- In active development — hexagonal-lite architecture finalized, AI
-  workflow (`/feature`, `/cleanup`) wired in, infrastructure layer
-  (config/env, DB client, logging, graceful shutdown, security, testing,
-  error handling, lint/format) fully implemented under `src/`. No feature
-  module exists yet under `src/modules/` — the `user` module described in
-  Architecture above is the target shape for the next feature, not yet built.
+- In active development — Clean Architecture / framework-agnostic design
+  finalized, AI workflow (`/feature`, `/cleanup`) wired in, infrastructure
+  layer (config/env, DB client, logging, graceful shutdown, security,
+  testing, error handling, lint/format) fully implemented under `src/`. No
+  feature module exists yet under `src/modules/` — the `user` module
+  described above is the target shape for the next feature, not yet built.

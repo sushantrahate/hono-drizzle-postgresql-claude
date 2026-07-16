@@ -13,6 +13,7 @@ import { errorHandler, notFoundHandler } from './middleware/error-handler.middle
 import { hostWhitelist } from './middleware/host-whitelist.middleware';
 import { globalRateLimiter } from './middleware/rate-limiter.middleware';
 import { requestLogger } from './middleware/request-logger.middleware';
+import userRoutes from './modules/user/user.routes';
 import type { AppVariables } from './types/hono';
 
 // Typed Variables so `c.var.log` / `c.var.requestId` are typed in every handler
@@ -85,6 +86,9 @@ app.use(
 app.get('/', (c) => {
   return c.text('Hello Hono!');
 });
+
+// /users — user CRUD module (see src/modules/user)
+app.route('/users', userRoutes);
 
 // --- Global fallbacks ---
 // Not part of the numbered middleware pipeline above — Hono's error boundary
