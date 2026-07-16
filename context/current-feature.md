@@ -1,16 +1,55 @@
-# Current Feature
+# Current Feature: User Management
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Bullet points of what success looks like -->
+- `POST /users` — create a user (email required/valid, name optional; email
+  lowercased before storage, uniqueness checked); `201` on success, `409` if
+  email already registered
+- `GET /users` — list all users, `200` with an array
+- `GET /users/:id` — get a single user by id, `200` or `404` if not found
+- `PATCH /users/:id` — update a user (`name` optional, no other fields
+  updatable this pass), `200` with updated user or `404` if not found
+- `DELETE /users/:id` — delete a user, `200` with no data or `404` if not
+  found
+- Drizzle `users` table: `id (uuid, pk, default random)`, `email (text,
+  unique, not null)`, `name (text, nullable)`, `created_at`/`updated_at`
+  (timestamp, default now, `updated_at` refreshed on write)
+- Full layer set per `coding-standards.md`: `user.types.ts`,
+  `user.repository.ts` (interface/port, TSDoc per method),
+  `user.repository.drizzle.ts` (only file importing `drizzle-orm`),
+  `user.service.ts` (business logic only, zero Hono/Drizzle imports, TSDoc
+  explaining *why*), `user.schema.ts` (`createUserSchema`/`updateUserSchema`
+  Zod), `user.handler.ts` (thin, `unifiedResponse` + message constants),
+  `user.routes.ts` (route comments, composition wiring), `user.test.ts`
+  (Vitest, service layer vs. fake in-memory repository)
+- New message constants: `USER_CREATED`, `USER_UPDATED`, `USER_DELETED`,
+  `USER_NOT_FOUND`, `EMAIL_ALREADY_IN_USE` in
+  `src/constants/messages.constants.ts`
+- Duplicate-email and not-found cases raise typed/`AppError` errors handled
+  by the existing centralized error middleware — no ad-hoc `if` + raw
+  response in the handler
+- Test coverage: create success, create with duplicate email (fail), update
+  existing user, update non-existent user (fail), delete existing user,
+  delete non-existent user (fail)
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- This is the first real feature module under `src/modules/` — the
+  reference shape every future module should copy
+- Must fully comply with `coding-standards.md` as written today: Response
+  Format, Comments & Documentation (TSDoc on every exported method, route
+  comments, no noise comments), layer boundaries, Biome clean
+- Log meaningful events via `c.var.log` (e.g. update/delete attempts on a
+  non-existent user) — no `console.log`
+- No auth/ownership checks in this pass — auth is a separate, later roadmap
+  item
+- Once this lands, flip `context/project-overview.md`'s Roadmap item "First
+  real feature module (`user`) proving this Clean Architecture shape
+  end-to-end" from `[ ]` to `[x]`
 
 ## History
 

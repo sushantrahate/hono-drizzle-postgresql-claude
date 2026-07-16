@@ -24,7 +24,9 @@ if (fs.existsSync(envFile)) {
 }
 
 export default defineConfig({
-  schema: './src/db/schema/*',
+  // Feature modules define their own table(s) in `<feature>.repository.drizzle.ts`
+  // (coding-standards.md); src/db/schema is only for tables shared across modules.
+  schema: ['./src/db/schema/*', './src/modules/**/*.repository.drizzle.ts'],
   out: './src/db/migrations',
   dialect: 'postgresql',
   dbCredentials: {
