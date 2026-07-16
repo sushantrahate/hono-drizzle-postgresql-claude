@@ -1,9 +1,10 @@
 # 🚀 Hono + Drizzle + PostgreSQL Boilerplate
 
 A modular, swappable Node.js backend built with Hono, Drizzle ORM,
-PostgreSQL, and TypeScript, using a hexagonal-lite (ports & adapters)
-architecture — business logic stays independent of both the web framework
-and the ORM. See [`context/project-overview.md`](context/project-overview.md)
+PostgreSQL, and TypeScript, following **Clean Architecture & Framework-Agnostic
+Design** (a lighter-weight take on ports & adapters / hexagonal architecture)
+— business logic stays independent of both the web framework and the ORM.
+See [`context/project-overview.md`](context/project-overview.md)
 for the full architecture and [`context/coding-standards.md`](context/coding-standards.md)
 for conventions.
 
@@ -18,7 +19,7 @@ for conventions.
 
 ### 🎯 Development & Code Quality
 
-✅ Hexagonal-lite architecture – Each feature module keeps its routes, handler, service, repository (port + adapter), schema, and types together, with business logic isolated from Hono and Drizzle\
+✅ Clean Architecture, Framework-Agnostic Design – Each feature module keeps its routes, handler, service, repository (port + adapter), schema, and types together, with business logic isolated from Hono and Drizzle\
 ✅ Biome – Single tool for linting, formatting, and import organization (no separate ESLint/Prettier setup)\
 ✅ Zod validation – Strict schema validation for request bodies and environment variables\
 
@@ -141,4 +142,3 @@ order) layer-boundary violations, response-format compliance, documentation,
 error handling, validation, testing, general code quality, and a light
 security pass — reporting concrete findings grouped by category without
 making any changes itself.
-

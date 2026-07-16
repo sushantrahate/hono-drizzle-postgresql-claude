@@ -7,7 +7,7 @@
 - Define interfaces for all inputs, outputs, and data models in `*.types.ts`
 - Use type inference where obvious, explicit types where helpful
 
-## Architecture (hexagonal-lite)
+## Architecture (Clean Architecture, framework-agnostic)
 
 - `service.ts` must never import Hono or Drizzle — it depends only on the
   `repository` interface, not the concrete implementation

@@ -1,7 +1,8 @@
 # Hono Drizzle PostgreSQL Boilerplate
 
 Feature-based Node.js backend built with Hono, Drizzle ORM, PostgreSQL, and
-TypeScript, using a hexagonal-lite (ports & adapters) architecture.
+TypeScript, following Clean Architecture / framework-agnostic design
+principles (a lighter-weight take on ports & adapters).
 
 ## Context Files
 
