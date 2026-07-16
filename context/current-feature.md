@@ -1,55 +1,16 @@
-# Current Feature: User Management
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- `POST /users` — create a user (email required/valid, name optional; email
-  lowercased before storage, uniqueness checked); `201` on success, `409` if
-  email already registered
-- `GET /users` — list all users, `200` with an array
-- `GET /users/:id` — get a single user by id, `200` or `404` if not found
-- `PATCH /users/:id` — update a user (`name` optional, no other fields
-  updatable this pass), `200` with updated user or `404` if not found
-- `DELETE /users/:id` — delete a user, `200` with no data or `404` if not
-  found
-- Drizzle `users` table: `id (uuid, pk, default random)`, `email (text,
-  unique, not null)`, `name (text, nullable)`, `created_at`/`updated_at`
-  (timestamp, default now, `updated_at` refreshed on write)
-- Full layer set per `coding-standards.md`: `user.types.ts`,
-  `user.repository.ts` (interface/port, TSDoc per method),
-  `user.repository.drizzle.ts` (only file importing `drizzle-orm`),
-  `user.service.ts` (business logic only, zero Hono/Drizzle imports, TSDoc
-  explaining *why*), `user.schema.ts` (`createUserSchema`/`updateUserSchema`
-  Zod), `user.handler.ts` (thin, `unifiedResponse` + message constants),
-  `user.routes.ts` (route comments, composition wiring), `user.test.ts`
-  (Vitest, service layer vs. fake in-memory repository)
-- New message constants: `USER_CREATED`, `USER_UPDATED`, `USER_DELETED`,
-  `USER_NOT_FOUND`, `EMAIL_ALREADY_IN_USE` in
-  `src/constants/messages.constants.ts`
-- Duplicate-email and not-found cases raise typed/`AppError` errors handled
-  by the existing centralized error middleware — no ad-hoc `if` + raw
-  response in the handler
-- Test coverage: create success, create with duplicate email (fail), update
-  existing user, update non-existent user (fail), delete existing user,
-  delete non-existent user (fail)
+<!-- Bullet points of what success looks like -->
 
 ## Notes
 
-- This is the first real feature module under `src/modules/` — the
-  reference shape every future module should copy
-- Must fully comply with `coding-standards.md` as written today: Response
-  Format, Comments & Documentation (TSDoc on every exported method, route
-  comments, no noise comments), layer boundaries, Biome clean
-- Log meaningful events via `c.var.log` (e.g. update/delete attempts on a
-  non-existent user) — no `console.log`
-- No auth/ownership checks in this pass — auth is a separate, later roadmap
-  item
-- Once this lands, flip `context/project-overview.md`'s Roadmap item "First
-  real feature module (`user`) proving this Clean Architecture shape
-  end-to-end" from `[ ]` to `[x]`
+<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
@@ -155,3 +116,40 @@ In Progress
   `coding-standards.md`/`project-overview.md` rules rather than generic
   best practices. Documented in `project-overview.md` (Development
   Workflow) and `README.md` (AI-Assisted Feature Workflow).
+- User Management — added `src/modules/user/` as the first real feature
+  module, proving the `types` → `repository` (port) →
+  `repository.drizzle` (adapter) → `service` → `schema` → `handler` →
+  `routes` shape end-to-end with full CRUD (`POST/GET/GET :id/PATCH/DELETE
+  /users`). Email uniqueness (create) and existence checks
+  (get/update/delete) are enforced in `user.service.ts` and surfaced as
+  `ConflictError`/`NotFoundError`, handled entirely by the existing
+  centralized error middleware — no ad-hoc response shaping in the
+  handler. Added `USER_CREATED`/`USERS_RETRIEVED`/`USER_RETRIEVED`/
+  `USER_UPDATED`/`USER_DELETED`/`USER_NOT_FOUND`/`EMAIL_ALREADY_IN_USE` to
+  `messages.constants.ts`. Widened `drizzle.config.ts`'s `schema` glob to
+  also scan `src/modules/**/*.repository.drizzle.ts` (previously only
+  `src/db/schema/*`), since per-module tables live inside the module
+  itself, not the shared schema folder — without this, `drizzle-kit
+  generate` silently would never have found the new `users` table. Since
+  `user.handler.ts`'s methods are class properties rather than inline
+  route lambdas, Hono can't auto-infer `c.req.valid(...)` types from
+  `routes.ts`'s `zValidator` calls, so two small local type aliases
+  (`JsonBody<S>`, `ParamValues<S>`) reconstruct just the `out` half of
+  `@hono/zod-validator`'s `Input` shape (verified against Hono's actual
+  `Context.req` typing that `in` is never consumed) to keep every handler
+  fully typed with no `any`. Live-tested the full CRUD flow with curl
+  against a local Postgres after `db:migrate`, which caught a real bug:
+  `updated_at` was stamped with `new Date()` (Node's clock) while
+  `created_at` used Postgres's `defaultNow()`, so any drift between the
+  app-server and DB clocks could produce an `updated_at` earlier than
+  `created_at` — fixed by stamping `updatedAt` with `sql\`now()\`` instead,
+  so both columns share one authoritative clock. 15 Vitest tests (service
+  layer against a fake in-memory `UserRepository`) plus the live smoke
+  test all passed; `build`/`lint`/`test` clean. Also added **📖 API
+  Endpoints**, **📂 Project Structure**, and **📌 Layer-by-Layer
+  Breakdown** sections to `README.md`, and flipped
+  `project-overview.md`'s roadmap checkbox for this module to `[x]`. A
+  small unrelated pre-existing "hexagonal-lite" → "Clean Architecture"
+  terminology rename (`CLAUDE.md`, `README.md`, `coding-standards.md`)
+  that predated this feature was committed separately first, to keep it
+  out of this feature's commit.
