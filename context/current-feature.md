@@ -1,31 +1,16 @@
-# Current Feature: VSCode Debugger Setup
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Add `.vscode/launch.json` with debug configurations for the dev server
-  (`tsx watch src/server.ts`, respecting `NODE_ENV=dev` and other env vars)
-- Add a debug configuration for running/debugging Vitest tests
-- Document how to use the debugger (which config to pick, how to set
-  breakpoints, env var handling) in `README.md`
-- Cross-reference the new debugger docs from other relevant context files
-  (`context/project-overview.md` and/or `CLAUDE.md`) if warranted
+<!-- Bullet points of what success looks like -->
 
 ## Notes
 
-- No `.vscode/launch.json` exists yet — only `.vscode/settings.json` (format-
-  on-save) and `.vscode/extensions.json` (Biome extension recommendation)
-- Dev server is started via `tsx watch src/server.ts` (see `dev` script in
-  `package.json`), not plain `node`/`ts-node`, so the debug config needs to
-  invoke `tsx` (or Node's `--import tsx` loader) rather than assuming a
-  compiled `dist/` output
-- `.gitignore` has a blanket `.vscode/*` rule with explicit `!` exceptions
-  for tracked files (discovered during the Biome Setup feature) — the new
-  `launch.json` must be added to that exception list or it will be silently
-  ignored by git
+<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
@@ -198,3 +183,32 @@ In Progress
   actual content) — confirmed as pre-existing and out of scope for this
   feature (`--pool=forks` and plain re-runs both pass reliably); left as
   a follow-up if it recurs. `build`/`lint`/`test` all clean before merge.
+- VSCode Debugger Setup — added `.vscode/launch.json` with four configs:
+  `Debug Server` (one-shot, `node --import tsx src/server.ts`, no
+  `restart` so it doesn't silently relaunch on exit), `Attach: Dev Server
+  (watch)` (attaches on port `9229` to a new `dev:debug` npm script —
+  `tsx watch --inspect` — with `restart: true` so it reattaches every
+  time `--watch` restarts the process), and `Debug Current Test File` /
+  `Debug All Tests` (both point `program` directly at
+  `node_modules/vitest/vitest.mjs` rather than the `vitest` bin, since
+  VS Code's Node debugger can't reliably resolve npm bin shims —
+  `.cmd` wrappers on Windows — across platforms). No changes needed to
+  `.gitignore`'s `.vscode/*` rule — the `!.vscode/launch.json` exception
+  was already in place from a prior feature. Documented in a new
+  "🐞 Debugging in VS Code" section in `README.md` (plus a `dev:debug`
+  Scripts row and a Features-list bullet) and cross-referenced from
+  `project-overview.md`'s Infrastructure section. The `code-reviewer`
+  subagent caught several real issues, all fixed: `restart: true` had
+  been set on the one-shot launch config too, which would have made
+  VS Code silently relaunch the server on any exit (crash *or* graceful
+  shutdown) instead of ending the debug session as the config's own
+  description promised — removed, kept only on the attach config where
+  it's actually needed; two comments restated each config's `name`
+  instead of explaining "why" — replaced with real reasoning or
+  dropped; and inconsistent `VSCode`/`VS Code` spelling was normalized
+  to match the existing `VS Code` usage elsewhere in the README.
+  Smoke-tested both the `node --import tsx` launch command and the
+  `vitest.mjs` direct-invocation command manually (outside the VS Code
+  UI, which isn't scriptable) before and after the fixes; `build`/
+  `lint`/`test` all clean, including confirming Biome parses the JSONC
+  comments in `launch.json` without complaint.
