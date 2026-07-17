@@ -1,16 +1,28 @@
-# Current Feature
+# Current Feature: Health Check API
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Bullet points of what success looks like -->
+- Add a `GET /health` endpoint reporting app liveness, uptime, and DB connectivity
+- Follow the existing module shape (`types` → `repository` port →
+  `repository.drizzle` adapter → `service` → `handler` → `routes`), same as
+  the `user` module
+- Response uses `unifiedResponse(...)`; 200 when DB reachable, 503 when not
+- Vitest coverage for the service layer against a fake in-memory repository
+- Wire `/health` into `app.ts`
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- No request body or params, so no `<feature>.schema.ts` / zod validation needed
+- DB check goes through the `HealthRepository` port (e.g. a trivial `select
+  1`) so `health.service.ts` stays framework/ORM-agnostic, per
+  coding-standards.md
+- Keep it in the normal middleware pipeline (no bypass of rate
+  limiter/host-whitelist) — this is an internal-network health check, not a
+  public uptime endpoint
 
 ## History
 

@@ -64,16 +64,24 @@ src/
 ├── middleware/                # Host whitelist, rate limiter, request logger, centralized error handler
 ├── types/                    # Shared Hono types (e.g. AppVariables for c.var.log)
 ├── utils/                    # Graceful shutdown
-└── modules/
-    └── user/                  # one folder per feature — see Layer-by-Layer Breakdown below
-        ├── user.types.ts
-        ├── user.repository.ts
-        ├── user.repository.drizzle.ts
-        ├── user.service.ts
-        ├── user.schema.ts
-        ├── user.handler.ts
-        ├── user.routes.ts
-        └── user.test.ts
+└── modules/                   # one folder per feature — see Layer-by-Layer Breakdown below
+    ├── user/
+    │   ├── user.types.ts
+    │   ├── user.repository.ts
+    │   ├── user.repository.drizzle.ts
+    │   ├── user.service.ts
+    │   ├── user.schema.ts
+    │   ├── user.handler.ts
+    │   ├── user.routes.ts
+    │   └── user.test.ts
+    └── health/                # no schema.ts — GET /health takes no input
+        ├── health.types.ts
+        ├── health.repository.ts
+        ├── health.repository.drizzle.ts
+        ├── health.service.ts
+        ├── health.handler.ts
+        ├── health.routes.ts
+        └── health.test.ts
 ```
 
 Unlike a layer-based structure (global `controllers/`, `services/`, `repositories/`
@@ -269,6 +277,16 @@ shape (`{ success, message, data? }`); see
 | `GET`    | `/users/:id` | Get a user by id. `200`, or `404` if not found                           |
 | `PATCH`  | `/users/:id` | Update a user's `name`. `200`, or `404` if not found                     |
 | `DELETE` | `/users/:id` | Delete a user. `200`, or `404` if not found                              |
+
+### Health (`src/modules/health`)
+
+Liveness + dependency check for uptime monitoring / container orchestration.
+`data` reports `status`, `uptime` (seconds), `timestamp`, and `database`
+(`'ok' | 'error'`).
+
+| Method | Path      | Description                                                        |
+| ------ | --------- | -------------------------------------------------------------------- |
+| `GET`  | `/health` | App liveness + DB connectivity check. `200` if reachable, `503` if not |
 
 ## Scripts
 

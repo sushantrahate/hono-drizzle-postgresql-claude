@@ -13,6 +13,7 @@ export const SUCCESS = {
   USER_RETRIEVED: 'User retrieved successfully',
   USER_UPDATED: 'User updated successfully',
   USER_DELETED: 'User deleted successfully',
+  HEALTH_CHECK_OK: 'Service is healthy',
 } as const;
 
 /** Messages for failure (`unifiedResponse(false, ...)`) responses. */
@@ -27,4 +28,5 @@ export const ERROR = {
   REQUEST_TIMED_OUT: 'Request timed out',
   USER_NOT_FOUND: 'User not found',
   EMAIL_ALREADY_IN_USE: 'Email already in use',
+  HEALTH_CHECK_FAILED: 'Service is unhealthy',
 } as const;
