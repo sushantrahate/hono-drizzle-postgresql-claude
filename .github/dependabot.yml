@@ -1,0 +1,48 @@
+version: 2
+
+updates:
+  # npm dependencies (package.json / package-lock.json)
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+    groups:
+      minor-and-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
+    # Major version bumps are excluded from the group above, so each gets
+    # its own PR — they're more likely to need code changes.
+
+  # GitHub Actions workflows — no workflow exists yet, but this is harmless
+  # to have in place now; there's simply nothing to update until one is added.
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'ci'
+
+  # Docker base image used in the Dockerfile
+  - package-ecosystem: 'docker'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'docker'
