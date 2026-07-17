@@ -349,3 +349,153 @@ order) layer-boundary violations, response-format compliance, documentation,
 error handling, validation, testing, general code quality, and a light
 security pass — reporting concrete findings grouped by category without
 making any changes itself.
+
+## ✨ Setup from scratch
+
+### ⚡ Scaffold the project
+
+```bash
+mkdir hono-drizzle-postgresql-claude && cd hono-drizzle-postgresql-claude
+npm create hono@latest .
+```
+```
+✔ Using target directory … .
+✔ Which template do you want to use? › nodejs
+✔ Do you want to install project dependencies? … yes
+✔ Which package manager do you want to use? › npm
+```
+
+Update README.md and push the initial commit to git.
+
+### ⚡ Split app.ts and server.ts
+
+`src/app.ts` — the Hono app instance, no server startup logic:
+```ts
+import { Hono } from 'hono'
+
+const app = new Hono()
+
+app.get('/', (c) => {
+  return c.text('Hello Hono!')
+})
+
+export default app
+```
+
+`src/server.ts` — entry point:
+```ts
+import { serve } from '@hono/node-server'
+import app from './app'
+
+const port = 3001
+
+serve({
+  fetch: app.fetch,
+  port,
+}, (info) => {
+  console.log(`Server is running on http://localhost:${info.port}`)
+})
+```
+
+### ⚡ Fix tsconfig.json module resolution
+
+`npm create hono@latest` scaffolds with `"module": "NodeNext"`, which
+requires explicit `.js` extensions on every relative import. Switch to:
+
+```jsonc
+// before
+"module": "NodeNext",
+
+// after
+"module": "ESNext",
+"moduleResolution": "Bundler",
+```
+
+### ⚡ Environment setup
+
+```bash
+npm install @hono/zod-validator dotenv
+npm install --save-dev cross-env
+```
+
+- Create `.env.dev` from `.env.example`
+- Add `src/config/env-schema.ts` (Zod schema) and `src/config/env.ts`
+  (loads the right `.env.<suffix>` file, validates against the schema,
+  fails fast on invalid/missing vars)
+- Import it as the very first line of `src/server.ts`:
+  ```ts
+  import './config/env';
+  ```
+  This guarantees env validation runs before anything else touches
+  `process.env`.
+
+### ⚡ Claude Code setup
+
+Copy `CLAUDE.md` and the `context/` folder (`project-overview.md`,
+`coding-standards.md`, `ai-interaction.md`, `current-feature.md`) from this
+repo into the new project, then copy `.claude/` (the `feature`/`cleanup`
+skills and the `code-reviewer` subagent). Open the project in VS Code with
+the Claude Code extension — no `/init` needed, the context is already
+written.
+
+### ⚡ PostgreSQL
+
+Install and run PostgreSQL (e.g. `postgres:18-alpine` via Docker Desktop)
+with:
+
+| Variable            | Value          |
+| ------------------- | -------------- |
+| `POSTGRES_USER`     | `dev_user`     |
+| `POSTGRES_PASSWORD` | `dev_password` |
+| `POSTGRES_DB`       | `dev_db`       |
+
+Update `.env.dev`:
+```ini
+DATABASE_URL="postgresql://dev_user:dev_password@localhost:5432/dev_db"
+```
+
+### ⚡ Feature specs, via `/feature`
+
+Copy `context/features/` from this repo into the new project — each file is
+a ready-made spec for one piece of infrastructure. In Claude Code:
+
+```
+/feature load <name>
+```
+
+loads that spec into `current-feature.md`'s `Goals`/`Notes` sections, then
+`/feature start` branches and builds it, `/feature test` verifies it,
+`/feature review` checks it, and `/feature complete` merges it and appends
+to `current-feature.md`'s `History` before you load the next one. Install
+`uni-response` (`npm install uni-response`) before the first one — the
+response format depends on it.
+
+Load and build them one at a time, in this order, to reconstruct the whole
+project:
+
+```
+/feature load database-spec
+/feature load logging
+/feature load graceful-shutdown
+/feature load security-hardening
+/feature load vitest-setup
+/feature load error-handling-middleware
+/feature load biome-setup
+/feature load user-management
+```
+
+### ⚡ Files with no `/feature` spec
+
+A few standard OSS/packaging files are static/config-only and don't go
+through the `/feature` workflow — copy them directly from this repo
+instead:
+
+- `LICENSE`
+- `.github/dependabot.yml`
+- `SECURITY.md`
+- `CONTRIBUTING.md`
+
+Finally, copy `Dockerfile` (and `.dockerignore`) from this repo for the
+production image build.
+
+If you liked it then please show your love by ⭐ the repo
