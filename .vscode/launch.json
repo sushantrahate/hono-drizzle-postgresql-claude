@@ -1,0 +1,64 @@
+{
+  // See README.md → "🐞 Debugging in VS Code" for how to use these.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Single-run debug of the server. Uses `node --import tsx` (not the
+      // `tsx` CLI/`--watch`) because a process restart during `--watch`
+      // drops the debugger's attachment — use "Attach: Dev Server (watch)"
+      // below if you want breakpoints *and* hot reload. No "restart" here
+      // on purpose: this config should stop when the process exits, not
+      // silently relaunch on every crash/graceful-shutdown.
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Server",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["--import", "tsx", "src/server.ts"],
+      "env": { "NODE_ENV": "dev" },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "smartStep": true
+    },
+    {
+      // Attaches to `npm run dev:debug` (tsx watch --inspect), so hot
+      // reload keeps working. "restart": true reattaches automatically
+      // every time `--watch` restarts the process. Start the script in a
+      // terminal first, then launch this config.
+      "type": "node",
+      "request": "attach",
+      "name": "Attach: Dev Server (watch)",
+      "port": 9229,
+      "restart": true,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      // Points `program` at vitest.mjs directly rather than the `vitest`
+      // bin, since VS Code's Node debugger can't reliably resolve npm bin
+      // shims (`.cmd` wrappers on Windows) across platforms.
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Current Test File",
+      "runtimeExecutable": "node",
+      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+      "args": ["run", "${relativeFile}"],
+      "env": { "NODE_ENV": "test" },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "autoAttachChildProcesses": true,
+      "smartStep": true
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug All Tests",
+      "runtimeExecutable": "node",
+      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+      "args": ["run"],
+      "env": { "NODE_ENV": "test" },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "autoAttachChildProcesses": true,
+      "smartStep": true
+    }
+  ]
+}

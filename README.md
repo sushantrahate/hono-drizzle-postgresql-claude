@@ -19,6 +19,7 @@ for conventions.
 
 ### 🎯 Development & Code Quality
 
+✅ VS Code debugger – launch/attach configs for the server and Vitest, see [🐞 Debugging in VS Code](#-debugging-in-vs-code)\
 ✅ Clean Architecture, Framework-Agnostic Design – Each feature module keeps its routes, handler, service, repository (port + adapter), schema, and types together, with business logic isolated from Hono and Drizzle\
 ✅ `user` feature module – full CRUD reference implementation (see [API Endpoints](#-api-endpoints)) proving the module shape end-to-end\
 ✅ Biome – Single tool for linting, formatting, and import organization (no separate ESLint/Prettier setup)\
@@ -293,6 +294,7 @@ Liveness + dependency check for uptime monitoring / container orchestration.
 | Command             | Description                              |
 | -------------------- | ----------------------------------------- |
 | `npm run dev`         | Start the dev server (watch mode)         |
+| `npm run dev:debug`   | Start the dev server (watch mode) with the inspector open on port `9229` — pair with the "Attach: Dev Server (watch)" VS Code launch config, see [🐞 Debugging in VS Code](#-debugging-in-vs-code) |
 | `npm run build`       | Type-check and compile to `dist/`         |
 | `npm run start`       | Run the compiled production build         |
 | `npm run db:generate` | Generate a Drizzle migration from schema changes |
@@ -308,6 +310,38 @@ Liveness + dependency check for uptime monitoring / container orchestration.
 Biome (lint + format) and Husky hooks run automatically: `git commit` runs
 `lint-staged` on staged `*.ts`/`*.json` files; `git push` runs
 `lint && test && build`.
+
+## 🐞 Debugging in VS Code
+
+Four launch configs live in [`.vscode/launch.json`](.vscode/launch.json).
+Open the **Run and Debug** panel (`Ctrl+Shift+D`), pick a config from the
+dropdown, and press `F5`. Set breakpoints by clicking left of a line number
+in the gutter.
+
+| Config                          | Use it for                                                              |
+| -------------------------------- | ------------------------------------------------------------------------- |
+| `Debug Server`                   | One-shot server debugging — launches `src/server.ts` directly under the debugger. No hot reload: stop and re-launch (`F5`) after editing a file |
+| `Attach: Dev Server (watch)`     | Debugging with hot reload. Run `npm run dev:debug` in a terminal first (starts `tsx watch` with the inspector on port `9229`), then launch this config to attach. Reattaches automatically every time `--watch` restarts the process |
+| `Debug Current Test File`        | Runs Vitest against just the file open in your active editor tab         |
+| `Debug All Tests`                | Runs the full Vitest suite under the debugger                            |
+
+Notes:
+
+- `Debug Server` and `Attach: Dev Server (watch)` both load environment
+  variables the normal way, through `src/config/env.ts` (`.env.dev`) — there's
+  no separate debug env file to keep in sync.
+- Only `Attach: Dev Server (watch)` sets `"restart": true`, so it
+  automatically reattaches every time `tsx watch` restarts the process after
+  a file change. `Debug Server` deliberately does *not* auto-relaunch —
+  when the process exits (including a normal `Ctrl+C`/graceful shutdown),
+  the debug session ends instead of silently relaunching.
+- `Debug Server` runs `node --import tsx`, which needs Node ≥ 20.6 for a
+  stable `--import` flag — the project doesn't pin a Node version, so
+  confirm your local Node version if this config fails to start.
+- The test configs run `node_modules/vitest/vitest.mjs` directly (the
+  config documented in [Vitest's own debugging guide](https://vitest.dev/guide/debugging.html))
+  rather than the `vitest` CLI bin, since VS Code's Node debugger can't
+  reliably resolve npm bin shims on all platforms.
 
 ## 🤖 AI-Assisted Feature Workflow
 

@@ -1,16 +1,31 @@
-# Current Feature
+# Current Feature: VSCode Debugger Setup
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Bullet points of what success looks like -->
+- Add `.vscode/launch.json` with debug configurations for the dev server
+  (`tsx watch src/server.ts`, respecting `NODE_ENV=dev` and other env vars)
+- Add a debug configuration for running/debugging Vitest tests
+- Document how to use the debugger (which config to pick, how to set
+  breakpoints, env var handling) in `README.md`
+- Cross-reference the new debugger docs from other relevant context files
+  (`context/project-overview.md` and/or `CLAUDE.md`) if warranted
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- No `.vscode/launch.json` exists yet — only `.vscode/settings.json` (format-
+  on-save) and `.vscode/extensions.json` (Biome extension recommendation)
+- Dev server is started via `tsx watch src/server.ts` (see `dev` script in
+  `package.json`), not plain `node`/`ts-node`, so the debug config needs to
+  invoke `tsx` (or Node's `--import tsx` loader) rather than assuming a
+  compiled `dist/` output
+- `.gitignore` has a blanket `.vscode/*` rule with explicit `!` exceptions
+  for tracked files (discovered during the Biome Setup feature) — the new
+  `launch.json` must be added to that exception list or it will be silently
+  ignored by git
 
 ## History
 

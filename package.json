@@ -3,6 +3,7 @@
   "type": "module",
   "scripts": {
     "dev": "cross-env NODE_ENV=dev tsx watch src/server.ts",
+    "dev:debug": "cross-env NODE_ENV=dev tsx watch --inspect src/server.ts",
     "build": "tsc -p tsconfig.build.json",
     "start": "cross-env NODE_ENV=prod node dist/server.js",
     "db:generate": "drizzle-kit generate",
