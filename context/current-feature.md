@@ -1,28 +1,16 @@
-# Current Feature: Health Check API
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Add a `GET /health` endpoint reporting app liveness, uptime, and DB connectivity
-- Follow the existing module shape (`types` → `repository` port →
-  `repository.drizzle` adapter → `service` → `handler` → `routes`), same as
-  the `user` module
-- Response uses `unifiedResponse(...)`; 200 when DB reachable, 503 when not
-- Vitest coverage for the service layer against a fake in-memory repository
-- Wire `/health` into `app.ts`
+<!-- Bullet points of what success looks like -->
 
 ## Notes
 
-- No request body or params, so no `<feature>.schema.ts` / zod validation needed
-- DB check goes through the `HealthRepository` port (e.g. a trivial `select
-  1`) so `health.service.ts` stays framework/ORM-agnostic, per
-  coding-standards.md
-- Keep it in the normal middleware pipeline (no bypass of rate
-  limiter/host-whitelist) — this is an internal-network health check, not a
-  public uptime endpoint
+<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
@@ -165,3 +153,33 @@ In Progress
   terminology rename (`CLAUDE.md`, `README.md`, `coding-standards.md`)
   that predated this feature was committed separately first, to keep it
   out of this feature's commit.
+- Health Check API — added `src/modules/health/` following the same
+  `types` → `repository` (port) → `repository.drizzle` (adapter) →
+  `service` → `handler` → `routes` shape as the `user` module, minus a
+  `schema.ts` since `GET /health` takes no input. `DrizzleHealthRepository`
+  checks connectivity with a trivial `select 1`; `HealthService` combines
+  that into an overall `status`/`database` (`'ok' | 'error'`) plus
+  `uptime`/`timestamp`, all via `unifiedResponse(...)` — 200 when the DB
+  is reachable, 503 when it isn't. Mounted at `/health` in `app.ts` inside
+  the normal middleware pipeline (no bypass of rate limiting or host
+  whitelist, since this is an internal-network check, not a public uptime
+  endpoint). Added `HEALTH_CHECK_OK`/`HEALTH_CHECK_FAILED` to
+  `messages.constants.ts`, and **Health** coverage to `README.md`'s
+  Project Structure and API Endpoints sections. The `code-reviewer`
+  subagent caught two real issues, both fixed: `checkDatabase()` was
+  swallowing the actual DB error (timeout/auth-failure/connection-refused
+  all looked identical as a bare `false`) — now logs it via the shared
+  `log` singleton before returning `false`; and `HealthService.getStatus()`
+  computed `status` and `database` from the same ternary twice — now
+  computed once, with a comment noting they're intentionally separate
+  fields in anticipation of future multi-dependency checks. Added
+  `health.test.ts` (service layer against a fake in-memory
+  `HealthRepository`, ok/error paths). Live-tested with curl against a
+  local Postgres — `GET /health` returned 200 with real `uptime`/
+  `database: "ok"`. Along the way, discovered `npm run test`'s default
+  Vitest "threads" pool is intermittently flaky on this Windows machine
+  (an import-time race that fails all suites at once with `Cannot read
+  properties of undefined (reading 'config')`, unrelated to any file's
+  actual content) — confirmed as pre-existing and out of scope for this
+  feature (`--pool=forks` and plain re-runs both pass reliably); left as
+  a follow-up if it recurs. `build`/`lint`/`test` all clean before merge.
