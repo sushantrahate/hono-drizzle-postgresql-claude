@@ -96,6 +96,10 @@ The shared Drizzle + postgres.js client instance lives at `src/db/client.ts`
   logger → host whitelist → secure headers → CORS → rate limiter → body
   limit → timeout (see `context/coding-standards.md` for the fully
   commented reference `app.ts`)
+- **Debugging**: `.vscode/launch.json` — one-shot and watch-mode configs for
+  the server plus Vitest configs, since the dev server runs through `tsx`
+  rather than plain `node`/compiled output (see `README.md` → 🐞 Debugging
+  in VS Code)
 
 ---
 
