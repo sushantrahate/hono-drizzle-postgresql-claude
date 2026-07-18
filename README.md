@@ -67,22 +67,22 @@ src/
 ├── utils/                    # Graceful shutdown
 └── modules/                   # one folder per feature — see Layer-by-Layer Breakdown below
     ├── user/
-    │   ├── user.types.ts
-    │   ├── user.repository.ts
-    │   ├── user.repository.drizzle.ts
-    │   ├── user.service.ts
-    │   ├── user.schema.ts
-    │   ├── user.handler.ts
-    │   ├── user.routes.ts
-    │   └── user.test.ts
+    │   ├── user.types.ts           # plain interfaces (User, CreateUserDTO, ...) — no framework/ORM types
+    │   ├── user.repository.ts      # repository interface (port) — no implementation
+    │   ├── user.repository.drizzle.ts # Drizzle adapter — table schema + interface implementation
+    │   ├── user.service.ts         # business logic — depends only on the repository interface
+    │   ├── user.schema.ts          # Zod request validation
+    │   ├── user.handler.ts         # Hono Context glue — calls service, returns unifiedResponse
+    │   ├── user.routes.ts          # wires handlers to HTTP paths
+    │   └── user.test.ts            # service tests against a fake in-memory repository
     └── health/                # no schema.ts — GET /health takes no input
-        ├── health.types.ts
-        ├── health.repository.ts
-        ├── health.repository.drizzle.ts
-        ├── health.service.ts
-        ├── health.handler.ts
-        ├── health.routes.ts
-        └── health.test.ts
+        ├── health.types.ts          # plain interfaces (HealthStatus, ...) — no framework/ORM types
+        ├── health.repository.ts     # repository interface (port) — no implementation
+        ├── health.repository.drizzle.ts # Drizzle adapter — runs `select 1` to check DB connectivity
+        ├── health.service.ts        # business logic — combines DB check + uptime/timestamp
+        ├── health.handler.ts        # Hono Context glue — calls service, returns unifiedResponse
+        ├── health.routes.ts         # wires handler to GET /health
+        └── health.test.ts           # service tests against a fake in-memory repository
 ```
 
 Unlike a layer-based structure (global `controllers/`, `services/`, `repositories/`
